@@ -1,6 +1,7 @@
 import os
-from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QFileDialog, QListWidget, QDialog, QLabel, QHBoxLayout
+from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QFileDialog, QListWidget, QDialog, QLabel, QHBoxLayout, QAbstractItemView
 from PyQt6.QtGui import QPalette, QColor
+from PyQt6.QtCore import Qt
 import PyPDF2
 class PDFCombinerApp(QWidget):
     def __init__(self):
@@ -19,8 +20,10 @@ class PDFCombinerApp(QWidget):
         add_files_btn.clicked.connect(self.add_files)
         layout.addWidget(add_files_btn)
 
-        # List Widget to display added files
+        # List Widget to display added files and reorder them
         self.file_list_widget = QListWidget(self)
+        self.file_list_widget.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
+        self.file_list_widget.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
         layout.addWidget(self.file_list_widget)
 
         # Combine Button
@@ -48,17 +51,20 @@ class PDFCombinerApp(QWidget):
             self.pdf_files.extend(selected_files)
 
             # Update the list widget with added files
+            self.file_list_widget.clear()
             self.file_list_widget.addItems([file for file in selected_files])
 
     def combine_pdfs(self):
         if not self.pdf_files:
             print('No PDF files added.')
             return
+        selected_items = self.file_list_widget.selectedItems()
+        reordered_files = [selected_item.text() for selected_item in selected_items]
         # Create a PdfWriter
         pdf_writer = PyPDF2.PdfWriter()
 
         # Loop through all the PDF files.
-        for pdf_file in self.pdf_files:
+        for pdf_file in reordered_files:
             pdf_file_obj = open(pdf_file, 'rb')
             pdf_reader = PyPDF2.PdfReader(pdf_file_obj)
 
